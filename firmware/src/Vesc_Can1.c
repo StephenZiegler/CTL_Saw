@@ -144,7 +144,7 @@ static uint8_t __attribute__ ((aligned(32))) uart1TxBuffer[100] = {0};
 char Buf[30] = {0};
 //FUNCTIONS
 
-static void tmr1EventHandler (uint32_t intCause, uintptr_t context)
+static void tmr2EventHandler (uint32_t intCause, uintptr_t context)
 {
     LD4_Toggle();
     xTxCanData = 1;
@@ -290,7 +290,7 @@ void VescCan()
  //           GPIO_PinInterruptEnable(CN18_PIN);
  //           GPIO_PinInterruptCallbackRegister(CN20_PIN, START_User_Handler, 0);
  //           GPIO_PinInterruptEnable(CN20_PIN);
-            TMR2_CallbackRegister(tmr1EventHandler, 0);  
+            TMR2_CallbackRegister(tmr2EventHandler, 0);  
             TMR2_Start();
             DMAC_ChannelCallbackRegister(DMAC_CHANNEL_0, UART1DmaChannelHandler, 0);
             // Initialize Trajectory:
