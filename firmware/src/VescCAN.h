@@ -25,8 +25,8 @@
  enum Axis {
     traverse = 1,
     saw = 2,
-    belt_top = 3,
-    belt_bot = 4
+    belt_bot = 3,
+    belt_top = 4
     };
  
  
@@ -171,14 +171,13 @@
     }VESC_FLAGS;
     
     VESC_FLAGS VescFlags;
-    VESC_Data VescData;
+    //VESC_FLAGS Axis;
     
+    VESC_Data VescData;
     VESC_Data Traverse;
     VESC_Data Saw;
-    VESC_Data FeedRoller;
-    
-    //VESC_Data VescData1;
-   // VESC_Data VescData2;
+    VESC_Data FeedBelt;
+    //VESC_Data Axis;
     
  
     float RampUp(float RampValue,float EndValue);
