@@ -286,10 +286,6 @@ void VescCan()
             GPIO_PinInterruptEnable(CN13_PIN);
             GPIO_PinInterruptCallbackRegister(CN14_PIN, NEG_LIM_User_Handler, 0);
             GPIO_PinInterruptEnable(CN14_PIN);
- //           GPIO_PinInterruptCallbackRegister(CN18_PIN, STOP_User_Handler, 0);
- //           GPIO_PinInterruptEnable(CN18_PIN);
- //           GPIO_PinInterruptCallbackRegister(CN20_PIN, START_User_Handler, 0);
- //           GPIO_PinInterruptEnable(CN20_PIN);
             TMR2_CallbackRegister(tmr2EventHandler, 0);  
             TMR2_Start();
             DMAC_ChannelCallbackRegister(DMAC_CHANNEL_0, UART1DmaChannelHandler, 0);
@@ -321,14 +317,24 @@ void VescCan()
             break;
             
         case 10:
+            if (VescFlags.bit.ValidMsgs == 1) {
+                //if(VescFlags.bit.ValidMsgs == 1) {
+                 //   fStartPos = VescData.PidPos;
             if (!CAN1_TxFIFOIsFull(0) )
             {
                 if(xTxCanData)
                 {
                     xTxCanData = 0;
                     SetCurrentLimits(traverse, 20,-20);
-                    iVescCase = 15;           
+                    iVescCase = 15;
+                    if (UART1_TransmitterIsReady())
+                    {
+                        memset(VescRx_msg,NULL,100);
+                        sprintf(VescRx_msg,"iVescCase = %d VescFlags.bit.ValidMsgs = %d \r\n",iVescCase,VescFlags.bit.ValidMsgs);
+                        UART1_Write(&VescRx_msg, sizeof(VescRx_msg)); 
+                    }
                 }
+            }
             }
             break;
         
@@ -351,7 +357,7 @@ void VescCan()
                 if(xTxCanData)
                 {
                     xTxCanData = 0;
-                    SetDuty(saw,0.1);
+                    SetDuty(saw,-0.1);
                     iVescCase = 40;           
                 }
             }
@@ -366,7 +372,7 @@ void VescCan()
                 {
                     //Clear interval bit
                     xTxCanData = 0;
-                    SetDuty(saw,0.1);
+                    SetDuty(saw,-0.1);
                     iVescCase = 41;
                 }
                 //Increment Duty Count 
@@ -398,15 +404,18 @@ void VescCan()
                 {
                     Delay = 0;
                      CutPos = 0;
-                    //Goto next state
-                    iVescCase = 42;
                     AtDuty = 0;
+                    while(!UART1_TransmitComplete());
+                    sprintf((char*)uart1TxBuffer, "iVescCase = %d VescFlags.bit.ValidMsgs = %d Traverse.RPM = %d Saw.RPM = %d \r\n",iVescCase,VescFlags.bit.ValidMsgs,Traverse.RPM,Saw.RPM);
+                    DMAC_ChannelTransfer(DMAC_CHANNEL_0, (const void *)uart1TxBuffer,strlen((const char*)uart1TxBuffer),(const void *)&U1TXREG, 1, 1); 
+                    while(!UART1_TransmitComplete());
                     if (UART1_TransmitterIsReady())
                     {
                         memset(VescRx_msg,NULL,100);
-                        sprintf(VescRx_msg,"Set home speed \r\n");
+                        sprintf(VescRx_msg,"VescFlags.bit.ValidMsgs = %d \r\n",VescFlags.bit.ValidMsgs);
                         UART1_Write(&VescRx_msg, sizeof(VescRx_msg)); 
                     }
+                    iVescCase = 42;
                 }   
             
             break;
@@ -570,6 +579,10 @@ void VescCan()
                     xTxCanData = 0;
                     SetCurrentLimits(traverse, 40,-40);
                     SetRPM(saw,-2000);
+                     while(!UART1_TransmitComplete());
+                        sprintf((char*)uart1TxBuffer, " iVescCase = %d PID Pos trav = %f PID Pos Saw = %f Saw.RPM = %d\r\n",iVescCase,Traverse.PidPos,Saw.PidPos,Saw.RPM);
+                        DMAC_ChannelTransfer(DMAC_CHANNEL_0, (const void *)uart1TxBuffer,strlen((const char*)uart1TxBuffer),(const void *)&U1TXREG, 1, 1); 
+                     while(!UART1_TransmitComplete());
                     iVescCase = 55;
                 }              
             }
@@ -586,11 +599,11 @@ void VescCan()
                 if(xTxCanData)
                     {
                     xTxCanData = 0;
-                    SetRPM(saw,-2000);
+                    SetRPM(saw,iCut_eRpm);
                     }             
                 }               
                 while(!UART1_TransmitComplete());
-                sprintf((char*)uart1TxBuffer, "PID Pos = %f lHomeMM = %f lHomeOffset = %d ENDTARGETPOS = %d RPMSaw = %d\r\n",VescData.PidPos,lHomeMM,lHomeOffset,ENDTARGETPOS, Saw.RPM);
+                sprintf((char*)uart1TxBuffer, " iVescCase = %d PID Pos = %f lHomeMM = %f lHomeOffset = %d ENDTARGETPOS = %d RPMSaw = %d\r\n",iVescCase,VescData.PidPos,lHomeMM,lHomeOffset,ENDTARGETPOS, Saw.RPM);
                 DMAC_ChannelTransfer(DMAC_CHANNEL_0, (const void *)uart1TxBuffer,strlen((const char*)uart1TxBuffer),(const void *)&U1TXREG, 1, 1); 
                 while(!UART1_TransmitComplete());
                 //Goto next state
@@ -611,14 +624,17 @@ void VescCan()
             if(PartCount >= SetPartCount){
                PartCount = 0; 
             }
-            if (!CAN1_TxFIFOIsFull(0) )
-            {
-                if(xTxCanData)
+            if (AtPos >= 10000) {   
+              AtPos = 0; 
+              if (!CAN1_TxFIFOIsFull(0) )
                 {
-                    xTxCanData = 0;
-                    SetDuty(saw,0);
+                    if(xTxCanData)
+                    {
+                        xTxCanData = 0;
+                        SetDuty(saw,0);
+                    }
                 }
-            }
+            } 
           iVescCase = iVescCase + 1*(Button1Trigger()||(I_Start_Get() != SWITCH_ON_STATE));
             break;
             
@@ -637,10 +653,10 @@ void VescCan()
                      {
                        SetPos(traverse,Pos);
                      }
-                   if (!CAN1_TxFIFOIsFull(0) )
-                     {
+      //             if (!CAN1_TxFIFOIsFull(0) )
+      //               {
      //                  SetDuty(saw,0);
-                     }
+      //               }
                 }
             }
             
@@ -653,12 +669,7 @@ void VescCan()
                 O_ClampSol_Set();
             }
             //When Button is pressed start moving the motor
-            //iVescCase = iVescCase + 2*(Button1Trigger());
-            //iVescCase = iVescCase + 2*(Button1Trigger()||(Delay >= 100000)&&(PartCount < PartsTotal));
-              //iVescCase = iVescCase + 2*(Button1Trigger()||(Delay >= 5000000)|| (Start == true));
-             //iVescCase = iVescCase + 2*((Button1Trigger()||(I_Start_Get() != SWITCH_ON_STATE))&&!(ControlledStop)&&(PartCount<= SetPartCount));
              iVescCase = iVescCase + 2*(((Button1Trigger())||(Delay >= 200000))&&(PartCount< SetPartCount));
-             //iVescCase = iVescCase + 2*(Button1Trigger());   //||(Delay >= 100000));
             break;
             
         case 62:
@@ -671,13 +682,10 @@ void VescCan()
                 direction = true;
                  }
             
-             //O_AirHockeySol_Clear();
-             //O_AirBlastSol_Clear();
-            
-            // sprintf((char*)uart1TxBuffer, "Start = %d \r\n",Pos);
-            // while(!UART1_TransmitComplete());
-            // DMAC_ChannelTransfer(DMAC_CHANNEL_0, (const void *)uart1TxBuffer,strlen((const char*)uart1TxBuffer),(const void *)&U1TXREG, 1, 1); 
-           //  while(!UART1_TransmitComplete());
+             while(!UART1_TransmitComplete());
+                sprintf((char*)uart1TxBuffer, "unit_id = %d VescData.RPM = %d Traverse.RPM = %d Saw.RPM = %d Saw.PidPos = %fTraverse.PidPos = %f\r\n",traverse,VescData.RPM,Traverse.RPM,Saw.RPM,Saw.PidPos,Traverse.PidPos);
+                DMAC_ChannelTransfer(DMAC_CHANNEL_0, (const void *)uart1TxBuffer,strlen((const char*)uart1TxBuffer),(const void *)&U1TXREG, 1, 1); 
+            while(!UART1_TransmitComplete());
              iVescCase = 64;
              
             break;
@@ -819,10 +827,10 @@ void VescCan()
             O_AirHockeySol_Set();
             O_AirBlastSol_Set();
             Pos =sendPos;
-           // sprintf((char*)uart1TxBuffer, "Pos = %d \r\n",Pos);
-           // while(!UART1_TransmitComplete());
-           // DMAC_ChannelTransfer(DMAC_CHANNEL_0, (const void *)uart1TxBuffer,strlen((const char*)uart1TxBuffer),(const void *)&U1TXREG, 1, 1); 
-           // while(!UART1_TransmitComplete());
+           while(!UART1_TransmitComplete());
+            sprintf((char*)uart1TxBuffer, " iVescCase = %d PID Pos trav = %f PID Pos Saw = %f Saw.RPM = %d\r\n",iVescCase,Traverse.PidPos,Saw.PidPos,Saw.RPM);
+            DMAC_ChannelTransfer(DMAC_CHANNEL_0, (const void *)uart1TxBuffer,strlen((const char*)uart1TxBuffer),(const void *)&U1TXREG, 1, 1); 
+           while(!UART1_TransmitComplete());
             iVescCase = 80;
         break;
     
@@ -944,11 +952,21 @@ void VescCan()
     {
       //Read Data from Vesc Drive on CANBUS Node 1
       receiveVescMessage(traverse);
-    }
+      // while(!UART1_TransmitComplete());
+      //          sprintf((char*)uart1TxBuffer, "unit_id = %d VescData.RPM = %d Traverse.RPM = %d Saw.RPM = %d Saw.PidPos = %fTraverse.PidPos = %f\r\n",traverse,VescData.RPM,Traverse.RPM,Saw.RPM,Saw.PidPos,Traverse.PidPos);
+       //         DMAC_ChannelTransfer(DMAC_CHANNEL_0, (const void *)uart1TxBuffer,strlen((const char*)uart1TxBuffer),(const void *)&U1TXREG, 1, 1); 
+      // while(!UART1_TransmitComplete());
+     
+   }
      if(CAN1_InterruptGet(2, CAN_FIFO_INTERRUPT_RXFULLIF_MASK))
     {
         //Read Data from Vesc Drive CANBUS Node 2
         receiveVescMessage(saw);
+       // while(!UART1_TransmitComplete());
+       //         sprintf((char*)uart1TxBuffer, "unit_id = %d VescData.RPM = %d Traverse.RPM = %d Saw.RPM = %d Saw.PidPos = %fTraverse.PidPos = %f\r\n",traverse,VescData.RPM,Traverse.RPM,Saw.RPM,Saw.PidPos,Traverse.PidPos);
+        //        DMAC_ChannelTransfer(DMAC_CHANNEL_0, (const void *)uart1TxBuffer,strlen((const char*)uart1TxBuffer),(const void *)&U1TXREG, 1, 1); 
+      // while(!UART1_TransmitComplete());
+       
     }
     StartBtn = StartBtnTrigger();
     StopBtn = StopBtnTrigger();
@@ -997,14 +1015,11 @@ void receiveVescMessage(int unit_id)
     static bool xMsg3Valid = 0;
     static bool xMsg4Valid = 0;
     static bool xMsg5Valid = 0;
+    
+    
    
     if( CAN1_MessageReceive( (uint32_t*)&ID, (uint8_t*)&Length, (uint8_t*)&Mydata, (uint16_t*)&Mytimestamp, SfifoNum, (CAN_MSG_RX_ATTRIBUTE*)&MymsgAttr ) )
     {
-//        //Write data to UART port    
-//        sprintf(VescRx_msg,"Data1: %02X / %02X / %02X / %02X / %02X / %02X / %02X / %02X / \r\n",Mydata[0],Mydata[1],Mydata[2],Mydata[3],Mydata[4],Mydata[5],Mydata[6],Mydata[7]);
-//        UART1_Write(&VescRx_msg, sizeof(VescRx_msg)); 
-//        //Make sure UART is done
-//        while(UART1_WriteIsBusy());
         xMsg1Valid = 1;
      
         VescData.msg.DutyCycle.str[0] = Mydata[7];
@@ -1019,13 +1034,21 @@ void receiveVescMessage(int unit_id)
         VescData.DutyCycle = (float)VescData.msg.DutyCycle.i16/1000.0;
         VescData.TotCurr   = (float)VescData.msg.TotCurr.i16/10.0;
         VescData.RPM       = VescData.msg.RPM.i32;
-       
-       //      while(!UART1_TransmitComplete());
-                    //sprintf((char*)uart1TxBuffer, "Temp = %02dF    SEC = %d   DegLat = %d\r\n", temperatureVal,GPSMod.ucSeconds,GPSMod.latDegrees);
-      //          sprintf((char*)uart1TxBuffer, "Duty: %1.3f\r\nTotCurr: %2.2f\r\nRPM: %d\r\nID: %d\r\n Valid = %d\r\n\n",VescData.DutyCycle,VescData.TotCurr,VescData.RPM,ID,xMsg1Valid);
-              
+        
+        if(unit_id == saw) {
+            Saw.RPM       = VescData.msg.RPM.i32;
+        }
+         if(unit_id == traverse) {
+            Traverse.RPM       = VescData.msg.RPM.i32;
+        }
+      // while(!UART1_TransmitComplete());
+      //          sprintf((char*)uart1TxBuffer, "VescData.RPM = %d Traverse.RPM = %d Saw.RPM = %d \r\n",VescData.RPM,Traverse.RPM,Saw.RPM);
        //         DMAC_ChannelTransfer(DMAC_CHANNEL_0, (const void *)uart1TxBuffer,strlen((const char*)uart1TxBuffer),(const void *)&U1TXREG, 1, 1); 
-      //      while(!UART1_TransmitComplete()); 
+       //while(!UART1_TransmitComplete());
+        //while(!UART1_TransmitComplete());
+          //      sprintf((char*)uart1TxBuffer, "unit_id = %d VescData.RPM = %d Traverse.RPM = %d Saw.RPM = %d \r\n",unit_id,VescData.RPM,Traverse.RPM,Saw.RPM);
+           //     DMAC_ChannelTransfer(DMAC_CHANNEL_0, (const void *)uart1TxBuffer,strlen((const char*)uart1TxBuffer),(const void *)&U1TXREG, 1, 1); 
+       //while(!UART1_TransmitComplete());
     }
     else
     {
@@ -1086,6 +1109,7 @@ void receiveVescMessage(int unit_id)
         VescData.msg.WattHrs.str[1]        = Mydata[2];
         VescData.msg.WattHrs.str[2]        = Mydata[1];
         VescData.msg.WattHrs.str[3]        = Mydata[0];
+       
         
         VescData.WattHrsCharged = (float)VescData.msg.WattHrsCharged.i32/1e4;
         VescData.WattHrs        = (float)VescData.msg.WattHrs.i32/1e4;
@@ -1105,7 +1129,7 @@ void receiveVescMessage(int unit_id)
     SfifoNum = unit_id +6;
     if( CAN1_MessageReceive( (uint32_t*)&ID, (uint8_t*)&Length, (uint8_t*)&Mydata, (uint16_t*)&Mytimestamp, SfifoNum, (CAN_MSG_RX_ATTRIBUTE*)&MymsgAttr ) )
     {
-        
+        //Axis. = unit_id;
 //        //Write data to UART port    
 //        sprintf(VescRx_msg,"Data4: %02X / %02X / %02X / %02X / %02X / %02X / %02X / %02X / \r\n",Mydata[0],Mydata[1],Mydata[2],Mydata[3],Mydata[4],Mydata[5],Mydata[6],Mydata[7]);
 //        UART1_Write(&VescRx_msg, sizeof(VescRx_msg)); 
@@ -1125,8 +1149,29 @@ void receiveVescMessage(int unit_id)
         VescData.PidPos        = (float)VescData.msg.PidPos.i16/50.0;
         VescData.TotInputCurr  = (float)VescData.msg.TotInputCurr.i16/10.0;
         VescData.MotorTemp     = (float)VescData.msg.MotorTemp.i16/10.0;
-        VescData.FetTemp       = (float)VescData.msg.FetTemp.i16/10.0;      
+        VescData.FetTemp       = (float)VescData.msg.FetTemp.i16/10.0; 
          
+        if(unit_id == saw) {
+            Saw.PidPos       = (float)VescData.msg.PidPos.i16/50.0;
+        }
+         if(unit_id == traverse) {
+            Traverse.PidPos       = (float)VescData.msg.PidPos.i16/50.0;
+        }
+        //if (unit_id == 1){
+       //     Traverse = VescData;
+       // }  
+       // if (unit_id == 2){
+       //     Saw = VescData;
+       // } 
+       // while(!UART1_TransmitComplete());
+        //       sprintf((char*)uart1TxBuffer, "unit_id = %d VescData.PidPos = %f Traverse.PidPos = %f Saw.PidPos = %f \r\n",unit_id,VescData.PidPos,Traverse.PidPos,Saw.PidPos);
+        //       DMAC_ChannelTransfer(DMAC_CHANNEL_0, (const void *)uart1TxBuffer,strlen((const char*)uart1TxBuffer),(const void *)&U1TXREG, 1, 1); 
+       // while(!UART1_TransmitComplete());
+       // while(!UART1_TransmitComplete());
+      //          sprintf((char*)uart1TxBuffer, "VescData.PidPos = %f Traverse.PidPos = %f Saw.PidPos = %f \r\n",VescData.PidPos,Traverse.PidPos,Saw.PidPos);
+       //         DMAC_ChannelTransfer(DMAC_CHANNEL_0, (const void *)uart1TxBuffer,strlen((const char*)uart1TxBuffer),(const void *)&U1TXREG, 1, 1); 
+       // while(!UART1_TransmitComplete());
+        
 //        memset(VescRx_msg,NULL,100);
 //        sprintf(VescRx_msg,"PidPos: %2.3f\r\nTotInputCurr: %2.3f\r\nMotorTemp: %2.3f\r\nFetTemp: %2.3f\r\n",VescData.PidPos,VescData.TotInputCurr,VescData.MotorTemp,VescData.FetTemp);
 //        UART1_Write(&VescRx_msg, sizeof(VescRx_msg)); 
@@ -1172,16 +1217,13 @@ void receiveVescMessage(int unit_id)
     }
     
     VescFlags.bit.ValidMsgs = xMsg1Valid & xMsg2Valid & xMsg3Valid & xMsg4Valid & xMsg5Valid;  
-    //VescFlags.bit.ValidMsgs = xMsg1Valid;  // & xMsg2Valid & xMsg3Valid & xMsg4Valid & xMsg5Valid;  
-    //VescFlags.bit.ValidMsgs = 1;
-     //VescFlags.bit.ValidMsgs = xMsg2Valid & xMsg3Valid & xMsg4Valid & xMsg5Valid;
     
-     if (unit_id == 1) {
-        Traverse = VescData;
-        }
-          if (unit_id == 2) {
-        Saw = VescData;
-        }
+     //if (unit_id == 1) {
+       // Traverse = VescData;
+       // }
+       //   if (unit_id == 2) {
+       // Saw = VescData;
+        //}
         //   while(!UART1_TransmitComplete());
         //        sprintf((char*)uart1TxBuffer, "Valid = %d\r\n ID = %d\r\n vescRPM = %d\r\n SawRPM = %d\r\n",VescData.RPM,ID,xMsg1Valid,Saw.RPM);
         //        DMAC_ChannelTransfer(DMAC_CHANNEL_0, (const void *)uart1TxBuffer,strlen((const char*)uart1TxBuffer),(const void *)&U1TXREG, 1, 1); 
