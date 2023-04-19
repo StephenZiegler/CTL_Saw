@@ -11,7 +11,7 @@
 #include "math.h"
 
  void  VescCan(void);
- //void  VescCanFeedRoller(void);
+ void  VescCanFeedBelt(void);
  bool Button1Trigger();
  bool StartBtnTrigger();
  bool StopBtnTrigger();
