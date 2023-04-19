@@ -34,7 +34,7 @@
 #include <string.h>
 #include <conio.h>
 #include <math.h>
-//#include "VescCANFeedRoller.h"
+//#include "VescCANFeedBelt.h"
 // *****************************************************************************
 // *****************************************************************************
 // Section: Main Entry Point
@@ -52,6 +52,7 @@ int main ( void )
         SYS_Tasks ( );
        
         VescCan();
+     //   VescCanFeedBelt();
     }
 
     /* Execution should not come here during normal operation */
