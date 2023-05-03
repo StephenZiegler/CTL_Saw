@@ -27,7 +27,7 @@
 #include <stdbool.h>                    // Defines true
 #include <stdlib.h>                     // Defines EXIT_FAILURE
 #include "definitions.h"                // SYS function prototypes
-#include "VescCAN.h"
+#include "VescCANSaw.h"
 #include <stdio.h>
 #include "device.h"
 #include <ctype.h>  		/* required for the isalnum function */
@@ -51,7 +51,7 @@ int main ( void )
         /* Maintain state machines of all polled MPLAB Harmony modules. */
         SYS_Tasks ( );
        
-        VescCan();
+        VescCanSaw();
      //   VescCanFeedBelt();
     }
 
