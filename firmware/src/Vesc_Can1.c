@@ -30,14 +30,12 @@
 #include <stdbool.h>                    // Defines true
 #include <stdlib.h>                     // Defines EXIT_FAILURE
 #include "definitions.h"                // SYS function prototypes
-#include "VescCAN.h"
+#include "VescCANSaw.h"
 #include <stdio.h>
-#include "device.h"
 #include <ctype.h>  		/* required for the isalnum function */
 #include <string.h>
 #include <conio.h>
 #include <math.h>
-#include "VescCAN.h"
 #include "Trajectory.h"
 // *****************************************************************************
 // *****************************************************************************
@@ -235,7 +233,7 @@ bool Button1Trigger()
     return BtnPressed; 
 }
 
-void VescCan()
+void VescCanSaw()
 {
     //Variable
     char VescError_msg[60] = {0};
