@@ -820,6 +820,48 @@ children:
       - type: Dynamic
         attributes: {id: core, value: '0'}
   - type: Boolean
+    attributes: {id: EVIC_12_ENABLE}
+    children:
+    - type: Values
+      children:
+      - type: Dynamic
+        attributes: {id: core, value: 'false'}
+  - type: Boolean
+    attributes: {id: EVIC_12_HANDLER_LOCK}
+    children:
+    - type: Values
+      children:
+      - type: Dynamic
+        attributes: {id: core, value: 'false'}
+  - type: String
+    attributes: {id: EVIC_12_INTERRUPT_HANDLER}
+    children:
+    - type: Values
+      children:
+      - type: Dynamic
+        attributes: {id: core, value: TIMER_3_Handler}
+  - type: Boolean
+    attributes: {id: EVIC_16_ENABLE}
+    children:
+    - type: Values
+      children:
+      - type: Dynamic
+        attributes: {id: core, value: 'true'}
+  - type: Boolean
+    attributes: {id: EVIC_16_HANDLER_LOCK}
+    children:
+    - type: Values
+      children:
+      - type: Dynamic
+        attributes: {id: core, value: 'true'}
+  - type: String
+    attributes: {id: EVIC_16_INTERRUPT_HANDLER}
+    children:
+    - type: Values
+      children:
+      - type: Dynamic
+        attributes: {id: core, value: TIMER_4_InterruptHandler}
+  - type: Boolean
     attributes: {id: EVIC_24_2_ENABLE}
     children:
     - type: Values
@@ -912,6 +954,27 @@ children:
       children:
       - type: Dynamic
         attributes: {id: core, value: CAN_1_Handler}
+  - type: Boolean
+    attributes: {id: EVIC_4_ENABLE}
+    children:
+    - type: Values
+      children:
+      - type: Dynamic
+        attributes: {id: core, value: 'false'}
+  - type: Boolean
+    attributes: {id: EVIC_4_HANDLER_LOCK}
+    children:
+    - type: Values
+      children:
+      - type: Dynamic
+        attributes: {id: core, value: 'false'}
+  - type: String
+    attributes: {id: EVIC_4_INTERRUPT_HANDLER}
+    children:
+    - type: Values
+      children:
+      - type: Dynamic
+        attributes: {id: core, value: TIMER_1_Handler}
   - type: Boolean
     attributes: {id: EVIC_8_ENABLE}
     children:
@@ -1188,6 +1251,13 @@ children:
       - type: Dynamic
         attributes: {id: core, value: '61440'}
   - type: Boolean
+    attributes: {id: TIMER_1_INTERRUPT_ENABLE_UPDATE}
+    children:
+    - type: Values
+      children:
+      - type: Dynamic
+        attributes: {id: core, value: 'true'}
+  - type: Boolean
     attributes: {id: TIMER_2_INTERRUPT_ENABLE}
     children:
     - type: Values
@@ -1215,6 +1285,41 @@ children:
       children:
       - type: Dynamic
         attributes: {id: tmr2, value: 'true'}
+  - type: Boolean
+    attributes: {id: TIMER_3_INTERRUPT_ENABLE_UPDATE}
+    children:
+    - type: Values
+      children:
+      - type: Dynamic
+        attributes: {id: core, value: 'true'}
+  - type: Boolean
+    attributes: {id: TIMER_4_INTERRUPT_ENABLE}
+    children:
+    - type: Values
+      children:
+      - type: Dynamic
+        attributes: {id: tmr4, value: 'true'}
+  - type: Boolean
+    attributes: {id: TIMER_4_INTERRUPT_ENABLE_UPDATE}
+    children:
+    - type: Values
+      children:
+      - type: Dynamic
+        attributes: {id: core, value: 'false'}
+  - type: String
+    attributes: {id: TIMER_4_INTERRUPT_HANDLER}
+    children:
+    - type: Values
+      children:
+      - type: Dynamic
+        attributes: {id: tmr4, value: TIMER_4_InterruptHandler}
+  - type: Boolean
+    attributes: {id: TIMER_4_INTERRUPT_HANDLER_LOCK}
+    children:
+    - type: Values
+      children:
+      - type: Dynamic
+        attributes: {id: tmr4, value: 'true'}
   - type: Integer
     attributes: {id: TMR1_CLOCK_FREQUENCY}
     children:
@@ -1243,13 +1348,20 @@ children:
       children:
       - type: Dynamic
         attributes: {id: core, value: '0'}
+  - type: Boolean
+    attributes: {id: TMR4_CLOCK_ENABLE}
+    children:
+    - type: Values
+      children:
+      - type: Dynamic
+        attributes: {id: tmr4, value: 'true'}
   - type: Integer
     attributes: {id: TMR4_CLOCK_FREQUENCY}
     children:
     - type: Values
       children:
       - type: Dynamic
-        attributes: {id: core, value: '0'}
+        attributes: {id: core, value: '48000000'}
   - type: Integer
     attributes: {id: TMR5_CLOCK_FREQUENCY}
     children:

@@ -59,6 +59,7 @@
 
 
 void TIMER_2_InterruptHandler( void );
+void TIMER_4_InterruptHandler( void );
 void CHANGE_NOTICE_InterruptHandler( void );
 void DMA_0_InterruptHandler( void );
 
@@ -68,6 +69,11 @@ void DMA_0_InterruptHandler( void );
 void __ISR(_TIMER_2_VECTOR, ipl1SOFT) TIMER_2_Handler (void)
 {
     TIMER_2_InterruptHandler();
+}
+
+void __ISR(_TIMER_4_VECTOR, ipl1SOFT) TIMER_4_Handler (void)
+{
+    TIMER_4_InterruptHandler();
 }
 
 void __ISR(_CHANGE_NOTICE_VECTOR, ipl1SOFT) CHANGE_NOTICE_Handler (void)

@@ -49,6 +49,7 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include "peripheral/uart/plib_uart1.h"
+#include "peripheral/tmr/plib_tmr4.h"
 #include "peripheral/can/plib_can1.h"
 #include "peripheral/tmr/plib_tmr2.h"
 #include "peripheral/clk/plib_clk.h"

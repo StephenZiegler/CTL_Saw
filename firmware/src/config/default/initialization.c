@@ -167,6 +167,8 @@ void SYS_Initialize ( void* data )
 
 	UART1_Initialize();
 
+    TMR4_Initialize();
+
     CAN1_Initialize();
 
     TMR2_Initialize();
