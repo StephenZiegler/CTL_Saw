@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<project>                                  
+  <executable name="dist/default/production/230402CTL_SAW.X.production.elf">                 
+    <memory name="program">                 
+      <units>bytes</units>                 
+      <length>531968</length>                 
+      <used>34288</used>                     
+      <free>497680</free>                     
+    </memory>                              
+    <memory name="data">              
+      <units>bytes</units>                 
+      <length>131072</length>                 
+      <used>2146</used>                     
+      <free>128926</free>                     
+    </memory>                              
+  </executable>                            
+</project>                                 
