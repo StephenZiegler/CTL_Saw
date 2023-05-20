@@ -164,12 +164,25 @@ int main ( void )
         //    DMAC_ChannelTransfer(DMAC_CHANNEL_2, (const void *)Test_msg, strlen((const char*)Test_msg), (const void *)&U1TXREG, 1, 1);
         //} 
           if (!UART1_WriteIsBusy()){ 
-                sprintf(Test_msg,"Stroke = %f\r\n",AutoPage.RxData.Stroke.FLT); 
+                sprintf(Test_msg,"Stroke = %d\r\n",(int)AutoPage.RxData.Stroke.FLT); 
                 //UART1_Write(&Test_msg, sizeof(Test_msg));
-                DMAC_ChannelTransfer(DMAC_CHANNEL_2, (const void *)Test_msg,strlen((const char*)Test_msg),(const void *)&U1TXREG, 1, 1); 
-               // DMAC_ChannelTransfer(DMAC_CHANNEL_2, (const void *)Test_msg, strlen((const char*)Test_msg), (const void *)&U1TXREG, 1, 1);
+                DMAC_ChannelTransfer(DMAC_CHANNEL_2, (const void *)Test_msg, strlen((const char*)Test_msg), (const void *)&U1TXREG, 1, 1); 
+             // DMAC_ChannelTransfer(DMAC_CHANNEL_2, (const void *)Test_msg, strlen((const char*)Test_msg), (const void *)&U1TXREG, 1, 1);
                 U1TXREG = 0x0;
-             }    
+             } 
+          
+   //         memset(TxBuffer,0,TXBUFFERSIZE);
+  //          sprintf(TxBuffer,"$~%s~%d~%d~%d~%d~%d~%d~@",  TxHmiCmds[0],
+   //                                                 data->TxData.AutoRunning.INT,
+   //                                                 (int)(data->RxData.Stroke.FLT*1000),
+   //                                                 (int)(data->RxData.HomeOffset.FLT*1000),
+   //                                                 (int)(data->RxData.CutSpeedRPM.FLT*1000),
+  //                                                  data->RxData.SetCount.INT,
+   //                                                 data->TxData.CurCount.INT);
+          
+          
+          
+          
           
             TimeCount++;
             TMR4_Start();
